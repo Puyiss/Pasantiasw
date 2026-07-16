@@ -7,6 +7,8 @@ import type { AdminStats, Course, StudentProfile, User } from '../types'
 type StudentRow = User & { profile?: StudentProfile }
 type Tab = 'equipo' | 'altas' | 'asignar'
 
+const CURSO_OPTIONS = ['6to Economía', '6to Naturales'] as const
+
 function initials(name: string) {
   return name
     .split(/\s+/)
@@ -47,6 +49,10 @@ export function AdminPage() {
       courseId: '',
     },
   )
+  const [courseAssign, setCourseAssign] = useState<{ professorId: string; name: string }>({
+    professorId: '',
+    name: CURSO_OPTIONS[0],
+  })
 
   const flash = (ok: string) => {
     setMsg(ok)
@@ -142,6 +148,26 @@ export function AdminPage() {
     try {
       await api('assignStudent', assign)
       flash('Asignación guardada')
+      setTab('equipo')
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error')
+    }
+  }
+
+  async function assignCourse(e: FormEvent) {
+    e.preventDefault()
+    try {
+      const existing = courses.find((c) => c.professorId === courseAssign.professorId)
+      if (existing) {
+        await api('updateCourse', { id: existing.id, name: courseAssign.name })
+      } else {
+        await api('createCourse', {
+          name: courseAssign.name,
+          professorId: courseAssign.professorId,
+        })
+      }
+      flash('Curso asignado al profesor')
       setTab('equipo')
       await load()
     } catch (err) {
@@ -456,7 +482,8 @@ export function AdminPage() {
       )}
 
       {tab === 'asignar' && (
-        <section className="glass-panel narrow-sheet">
+        <div className="split-board">
+        <section className="glass-panel">
           <div className="sheet-head">
             <div>
               <h2>Reasignar alumno</h2>
@@ -522,6 +549,58 @@ export function AdminPage() {
             </button>
           </form>
         </section>
+
+        <section className="glass-panel">
+          <div className="sheet-head">
+            <div>
+              <h2>Asignar curso a profesor</h2>
+              <p className="sheet-sub">Definí el curso a cargo de cada profesor.</p>
+            </div>
+          </div>
+          <form className="stack-form" onSubmit={assignCourse}>
+            <label>
+              Profesor
+              <select
+                value={courseAssign.professorId}
+                onChange={(e) => {
+                  const professorId = e.target.value
+                  const current = courses.find((c) => c.professorId === professorId)
+                  setCourseAssign((a) => ({
+                    ...a,
+                    professorId,
+                    name: current?.name ?? a.name,
+                  }))
+                }}
+                required
+              >
+                <option value="">Elegir…</option>
+                {professors.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Curso
+              <select
+                value={courseAssign.name}
+                onChange={(e) => setCourseAssign((a) => ({ ...a, name: e.target.value }))}
+                required
+              >
+                {CURSO_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="btn-gold" type="submit">
+              Guardar curso
+            </button>
+          </form>
+        </section>
+        </div>
       )}
 
       {editUser && (

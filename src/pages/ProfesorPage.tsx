@@ -60,24 +60,6 @@ export function ProfesorPage() {
     void load()
   }, [load])
 
-  async function saveCourse(e: FormEvent) {
-    e.preventDefault()
-    if (!user) return
-    try {
-      if (course) {
-        setCourse(await api<Course>('updateCourse', { id: course.id, name: curso }))
-      } else {
-        setCourse(
-          await api<Course>('createCourse', { name: curso, professorId: user.id }),
-        )
-      }
-      flash('Curso guardado')
-      await load()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar')
-    }
-  }
-
   async function createStudent(e: FormEvent) {
     e.preventDefault()
     if (!user) return
@@ -159,41 +141,6 @@ export function ProfesorPage() {
         <div className={`toast ${error ? 'toast-error' : 'toast-ok'}`}>{error || msg}</div>
       )}
 
-      <section className="glass-panel">
-        <div className="sheet-head">
-          <div>
-            <h2>Curso a cargo</h2>
-            <p className="sheet-sub">Elegí entre 6to Economía o 6to Naturales</p>
-          </div>
-          <button type="button" className="btn-ghost-lujan" onClick={() => void exportCourseReports()}>
-            Exportar bitácoras
-          </button>
-        </div>
-        <form className="grid-form-2" onSubmit={saveCourse} style={{ alignItems: 'end' }}>
-          <label className="field">
-            <span className="label-gold">Curso</span>
-            <select
-              className="input-lujan"
-              value={CURSO_OPTIONS.includes(curso as (typeof CURSO_OPTIONS)[number]) ? curso : CURSO_OPTIONS[0]}
-              onChange={(e) => {
-                setCurso(e.target.value)
-                setForm((f) => ({ ...f, curso: e.target.value }))
-              }}
-              required
-            >
-              {CURSO_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="btn-gold" type="submit">
-            Guardar curso
-          </button>
-        </form>
-      </section>
-
       <div className="split-board">
         <section className="glass-panel">
           <div className="sheet-head">
@@ -263,6 +210,13 @@ export function ProfesorPage() {
               <h2>Nómina</h2>
               <p className="sheet-sub">{students.length} alumnos</p>
             </div>
+            <button
+              type="button"
+              className="btn-ghost-lujan"
+              onClick={() => void exportCourseReports()}
+            >
+              Exportar bitácoras
+            </button>
           </div>
           {students.length === 0 ? (
             <p className="empty">Todavía no hay alumnos cargados.</p>
