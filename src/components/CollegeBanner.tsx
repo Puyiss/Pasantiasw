@@ -1,4 +1,4 @@
-const LOGO_URL = '/logo-lujan.jpg'
+const LOGO_URL = `${import.meta.env.BASE_URL}logo-lujan.jpg`
 
 interface CollegeBannerProps {
   compact?: boolean
